@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mint Tokens</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.3.6/dist/web3.min.js"></script>
+    <script>
+      window.addEventListener("load", async () => {
+        // connect to web3 provider
+        if (typeof window.ethereum !== "undefined") {
+          await window.ethereum.enable();
+          window.web3 = new Web3(window.ethereum);
+        } else {
+          alert("Please install MetaMask to use this dApp!");
+        }
+
+        // get contract instance
+        const contractAddress = "<contract address>";
+        const contractABI = <contract ABI>;
+        const contract = new window.web3.eth.Contract(contractABI, contractAddress);
+
+        // handle form submission
+        const form = document.getElementById("mint-form");
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+
+          // get form data
+          const amount = Number(document.getElementById("amount-input").value);
+          const isUK = document.getElementById("is-uk-radio").checked;
+
+          // check network
+          const networkId = await window.web3.eth.net.getId();
+          if (networkId !== 5) { // Goerli testnet
+            alert("Please switch to Goerli testnet to use this dApp!");
+            return;
+          }
+
+          // get user account
+          const accounts = await window.web3.eth.getAccounts();
+          const account = accounts[0];
+
+          // call mintForAll function
+          const options = {
+            from: account,
+            value: window.web3.utils.toWei(amount.toString(), "ether")
+          };
+          try {
+            await contract.methods.mintForAll(amount, isUK).send(options);
+            alert("Minting was successful!");
+          } catch (error) {
+            alert("Minting failed: " + error.message);
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Mint Tokens</h1>
+    <form id="mint-form">
+      <div>
+        <label for="amount-input">Amount:</label>
+        <input type="number" id="amount-input" name="amount" required />
+      </div>
+      <div>
+        <label>Is UK:</label>
+        <label>
+          <input type="radio" name="is-uk" id="is-uk-radio-yes" value="yes" required />
+          Yes
+        </label>
+        <label>
+          <input type="radio" name="is-uk" id="is-uk-radio-no" value="no" required />
+          No
+        </label>
+      </div>
+      <div>
+        <button type="submit">Mint</button>
+      </div>
+    </form>
+  </body>
+</html>
